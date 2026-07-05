@@ -108,6 +108,21 @@ def clean_post_text(text):
     return text.strip()
 
 
+def detect_real_source(text, default_channel):
+    """
+    Vasculha o texto em busca de grandes agências globais para usar como fonte.
+    Se não achar nenhuma, adota um termo neutro de mercado ("AGÊNCIAS").
+    """
+    agencias_conhecidas = ["reuters", "bloomberg", "cnbc", "wsj", "infomoney", "money times", "valor"]
+    text_lower = text.lower()
+    
+    for agencia in agencias_conhecidas:
+        if agencia in text_lower:
+            return agencia.upper()
+            
+    return "AGÊNCIAS"
+
+
 def is_channel_bio(text):
     bio_markers = [
         "ver canal", "para entrar em contato", "@jonasesteves", 
@@ -177,24 +192,33 @@ def main():
             if not clean_text:
                 continue
 
-            # --- PADRONIZAÇÃO DE LAYOUT DO ANTES DO SINO ---
-            linhas = clean_text.split("\n")
-            titulo = html_module.escape(linhas[0].strip(), quote=False)
+            # --- DETECÇÃO INTELIGENTE DE FONTE ---
+            fonte_detectada = detect_real_source(clean_text, clean_channel)
             
-            # O resto das linhas vira o corpo da notícia (se houver)
+            # Remove a palavra isolada da agência se ela estiver sobrando em uma linha única do texto limpo
+            clean_text = re.sub(r'(?i)^\s*(reuters|bloomberg|cnbc|wsj)\s*$', '', clean_text, flags=re.MULTILINE).strip()
+
+            # --- PADRONIZAÇÃO DE LAYOUT DO ANTES DO SINO ---
+            linhas = [l.strip() for l in clean_text.split("\n") if l.strip()]
+            if not lines:
+                continue
+                
+            titulo = html_module.escape(linhas[0], quote=False)
+            
+            # O resto das linhas vira o corpo da notícia (se hover)
             if len(linhas) > 1:
                 corpo_puro = "\n".join(linhas[1:]).strip()
                 corpo = html_module.escape(corpo_puro, quote=False)
             else:
                 corpo = ""
             
-            fonte_tag = html_module.escape(clean_channel.upper(), quote=False)
+            fonte_tag = html_module.escape(fonte_detectada, quote=False)
 
-            # Monta o design com tags HTML seguras
+            # Monta o design com as tags HTML estruturadas e limpas
             if corpo:
-                message = f"🔔 <b>{titulo}</b>\n\n{corpo}\n\n<i>Fonte: {fonte_tag}</i>"
+                message = f"<b>🔔 {titulo}</b>\n\n{corpo}\n\n<i>Fonte: {fonte_tag}</i>"
             else:
-                message = f"🔔 <b>{titulo}</b>\n\n<i>Fonte: {fonte_tag}</i>"
+                message = f"<b>🔔 {titulo}</b>\n\n<i>Fonte: {fonte_tag}</i>"
 
             # Envia formatado
             if send_telegram_message(message):
