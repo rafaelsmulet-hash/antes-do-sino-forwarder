@@ -79,6 +79,17 @@ def fetch_channel_posts(channel_username):
     return posts
 
 
+def clean_post_text(text):
+    text = re.sub(r"\n*Grupo Bovespa News\s*$", "", text, flags=re.IGNORECASE).strip()
+    return text
+
+
+def is_channel_bio(text):
+    bio_markers = ["ver canal", "para entrar em contato", "@jonasesteves", "contato@"]
+    lower_text = text.lower()
+    return any(marker in lower_text for marker in bio_markers)
+
+
 def send_telegram_message(text):
     url = "https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendMessage"
     payload = {"chat_id": TARGET_CHAT_ID, "text": text, "disable_web_page_preview": False}
@@ -123,9 +134,18 @@ def main():
         new_posts = [p for p in posts if p["id"] > last_id]
 
         for post in new_posts:
-            message = "📲 " + clean_channel + "\n\n" + post["text"]
+            clean_text = clean_post_text(post["text"])
+
+            if is_channel_bio(clean_text):
+                print("Ignorado (bio do canal): " + clean_text[:60])
+                continue
+
+            if not clean_text:
+                continue
+
+            message = clean_text
             if send_telegram_message(message):
-                print("Encaminhado de " + clean_channel + " (id " + str(post["id"]) + "): " + post["text"][:60])
+                print("Encaminhado de " + clean_channel + " (id " + str(post["id"]) + "): " + clean_text[:60])
                 time.sleep(3)
 
         if new_posts:
