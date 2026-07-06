@@ -36,5 +36,12 @@ jobs:
           git config --global user.name "antes-do-sino-bot"
           git config --global user.email "bot@antesdosino.local"
           git add forwarder_state.json
-          git diff --staged --quiet || git commit -m "Atualiza estado do encaminhador"
-          git push
+          
+          # Só commita e dá push se o JSON de estado realmente mudou
+          if ! git diff --staged --quiet; then
+            git commit -m "Atualiza estado do encaminhador"
+            git pull --rebase origin main
+            git push origin main
+          else
+            echo "Nenhum post novo para salvar. Pulando push."
+          fi
