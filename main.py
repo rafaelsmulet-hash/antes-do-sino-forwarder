@@ -94,7 +94,13 @@ def clean_post_text(text):
 
 
 def is_channel_bio(text):
-    bio_markers = ["ver canal", "para entrar em contato", "@jonasesteves", "contato@"]
+    bio_markers = [
+        "ver canal", "para entrar em contato", "@jonasesteves", "contato@",
+        "taxa de apenas", "mensalmente", "garantia de 7 dias",
+        "colabore com nosso trabalho", "assinando nosso servico",
+        "assinando nosso serviço", "pagina de assinatura", "página de assinatura",
+        "principais cotacoes do mercado financeiro", "principais cotações do mercado financeiro",
+    ]
     lower_text = text.lower()
     return any(marker in lower_text for marker in bio_markers)
 
