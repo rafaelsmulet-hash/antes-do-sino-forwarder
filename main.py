@@ -189,12 +189,17 @@ def main():
             else:
                 corpo = ""
 
+            is_real_agency = fonte_detectada in KNOWN_AGENCIES
             fonte_tag = html_module.escape(fonte_detectada, quote=False)
 
-            if corpo:
+            if corpo and is_real_agency:
                 message = emoji_marcador + " <b>" + titulo + "</b>\n\n" + corpo + "\n\n<i>Fonte: " + fonte_tag + "</i>"
-            else:
+            elif corpo:
+                message = emoji_marcador + " <b>" + titulo + "</b>\n\n" + corpo
+            elif is_real_agency:
                 message = emoji_marcador + " <b>" + titulo + "</b>\n\n<i>Fonte: " + fonte_tag + "</i>"
+            else:
+                message = emoji_marcador + " <b>" + titulo + "</b>"
 
             if len(message) > 3900:
                 message = message[:3900] + "..."
