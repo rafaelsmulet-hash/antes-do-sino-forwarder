@@ -88,6 +88,8 @@ def fetch_channel_posts(channel_username):
 
 def clean_post_text(text):
     text = re.sub(r"\n*Grupo Bovespa News\s*$", "", text, flags=re.IGNORECASE).strip()
+    text = re.sub(r"^\s*t\.me/\S+\s*$", "", text, flags=re.IGNORECASE | re.MULTILINE).strip()
+    text = re.sub(r"\n{2,}", "\n", text).strip()
     return text
 
 
