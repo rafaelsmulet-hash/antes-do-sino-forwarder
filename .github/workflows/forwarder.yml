@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout repositorio
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # <--- CRÍTICO: Resolve o erro de falta de histórico local
 
       - name: Configurar Python
         uses: actions/setup-python@v5
@@ -37,10 +39,11 @@ jobs:
           git config --global user.email "bot@antesdosino.local"
           git add forwarder_state.json
           
-          # Só commita e dá push se o JSON de estado realmente mudou
+          # Verifica se há alterações reais no ficheiro de estado
           if ! git diff --staged --quiet; then
             git commit -m "Atualiza estado do encaminhador"
-            git pull --rebase origin main
+            # Puxa as suas alterações manuais do GitHub e une de forma segura
+            git pull origin main --no-rebase
             git push origin main
           else
             echo "Nenhum post novo para salvar. Pulando push."
